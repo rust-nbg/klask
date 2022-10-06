@@ -1,3 +1,4 @@
+use clap::error::{ContextKind, ContextValue, ErrorKind};
 use inflector::Inflector;
 
 #[derive(Debug, thiserror::Error)]
@@ -19,15 +20,18 @@ pub enum ExecutionError {
 impl From<clap::Error> for ExecutionError {
     fn from(err: clap::Error) -> Self {
         match clap::Error::kind(&err) {
-            clap::ErrorKind::ValueValidation => {
-                if let Some(name) = err.info[0]
-                    .split_once('<')
-                    .and_then(|(_, suffix)| suffix.split_once('>'))
-                    .map(|(prefix, _)| prefix.to_sentence_case())
+            ErrorKind::ValueValidation => {
+                // TODO parse out the actual name of the option
+                let invalid_arg = err.get(ContextKind::InvalidArg);
+                let invalid_value = err.get(ContextKind::InvalidValue);
+                if let (
+                    Some(ContextValue::String(invalid_arg)),
+                    Some(ContextValue::String(invalid_value)),
+                ) = (invalid_arg, invalid_value)
                 {
                     ExecutionError::ValidationError {
-                        name,
-                        message: err.info[2].clone(),
+                        name: invalid_arg.to_sentence_case(),
+                        message: invalid_value.clone(),
                     }
                 } else {
                     ExecutionError::NoValidationName

@@ -35,7 +35,7 @@ mod settings;
 
 use app_state::AppState;
 use child_app::{ChildApp, StdinType};
-use clap::{ArgMatches, Command, FromArgMatches, IntoApp};
+use clap::{ArgMatches, Command, CommandFactory, FromArgMatches};
 use eframe::{
     egui::{self, Button, Color32, Context, FontData, FontDefinitions, Grid, Style, TextEdit, Ui},
     CreationContext, Frame,
@@ -59,7 +59,7 @@ const CHILD_APP_ENV_VAR: &str = "KLASK_CHILD_APP";
 ///    println!("{}", matches.is_present("debug"))
 /// });
 /// ```
-pub fn run_app(app: Command<'static>, settings: Settings, f: impl FnOnce(&ArgMatches)) {
+pub fn run_app(app: Command, settings: Settings, f: impl FnOnce(&ArgMatches)) {
     if std::env::var(CHILD_APP_ENV_VAR).is_ok() {
         std::env::remove_var(CHILD_APP_ENV_VAR);
 
@@ -70,7 +70,7 @@ pub fn run_app(app: Command<'static>, settings: Settings, f: impl FnOnce(&ArgMat
         f(&matches)
     } else {
         // During validation we don't pass in a binary name
-        let app = app.setting(clap::AppSettings::NoBinaryName);
+        let app = app.no_binary_name(true);
         let app_name = app.get_name().to_string();
 
         // eframe::run_native requires that Box::new(klask) has 'static
@@ -123,7 +123,7 @@ pub fn run_app(app: Command<'static>, settings: Settings, f: impl FnOnce(&ArgMat
 /// ```
 pub fn run_derived<C, F>(settings: Settings, f: F)
 where
-    C: IntoApp + FromArgMatches,
+    C: FromArgMatches + CommandFactory,
     F: FnOnce(C),
 {
     run_app(C::command(), settings, |m| {
@@ -146,7 +146,7 @@ struct Klask<'s> {
     output: Output,
     // This isn't a generic lifetime because eframe::run_native() requires
     // a 'static lifetime because boxed trait objects default to 'static
-    app: Command<'static>,
+    app: Command,
 
     custom_font: Option<Cow<'static, [u8]>>,
     localization: &'s LocalizationSettings,

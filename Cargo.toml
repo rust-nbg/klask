@@ -11,11 +11,12 @@ keywords = ["clap", "gui", "ui", "cli", "egui"]
 
 [dependencies]
 Inflector = { version = "0.11.4", default-features = false }
-clap = { version = "3", default-features = false, features = [
+clap = { version = "4", default-features = false, features = [
     "std",
     "derive",
     "unicode",
     "deprecated",
+    "error-context",
 ] }
 heck = { version = "*", features = ["unicode"] } # Add unicode support to clap
 uuid = { version = "1", features = ["v4"] }

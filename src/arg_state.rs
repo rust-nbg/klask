@@ -42,7 +42,7 @@ pub enum ArgKind {
 
 impl<'s> ArgState<'s> {
     pub fn new(arg: &Arg, localization: &'s LocalizationSettings) -> Self {
-        let kind = if arg.is_takes_value_set() {
+        let kind = if arg.get_num_args().map(|range| range.takes_values()) == Some(true) {
             let mut default = arg
                 .get_default_values()
                 .iter()
@@ -50,7 +50,6 @@ impl<'s> ArgState<'s> {
 
             let possible = arg
                 .get_possible_values()
-                .unwrap_or_default()
                 .iter()
                 .map(|v| v.get_name().to_string())
                 .collect();
@@ -65,7 +64,7 @@ impl<'s> ArgState<'s> {
                     possible,
                     multiple_values,
                     multiple_occurrences,
-                    use_delimiter: arg.is_use_value_delimiter_set()
+                    use_delimiter: arg.is_use_value_delimiter_set(),
                         | arg.is_require_value_delimiter_set(),
                     req_delimiter: arg.is_require_value_delimiter_set(),
                     value_hint: arg.get_value_hint(),
